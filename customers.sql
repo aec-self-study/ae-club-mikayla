@@ -1,21 +1,24 @@
-with customer_orders as (
-  select
-     customer_id
-     , count(*) as n_orders
-     , min(created_at) as first_order_at
+WITH customer_orders AS (
 
-  from `analytics-engineers-club.coffee_shop.orders` 
-  group by 1
+    SELECT
+        customer_id,
+        count(*) AS n_orders,
+        min(created_at) AS first_order_at
+    FROM `analytics-engineers-club.coffee_shop.orders` 
+    GROUP BY 1
+
 )
+WITH final AS (
+    SELECT 
+        customers.id AS customer_id,
+        customers.name,
+        customers.email,
+        coalesce(customer_orders.n_orders, 0) AS n_orders,
+        customer_orders.first_order_at
+    FROM `analytics-engineers-club.coffee_shop.customers` AS customers
+    LEFT JOIN customer_orders
+        ON customers.id = customer_orders.customer_id 
+    LIMIT 5
 
-select 
-  customers.id as customer_id
-  , customers.name
-  , customers.email
-  , coalesce(customer_orders.n_orders, 0) as n_orders
-  , customer_orders.first_order_at
-from `analytics-engineers-club.coffee_shop.customers` as customers
-left join  customer_orders
-  on  customers.id = customer_orders.customer_id 
-
-limit 5
+)
+ SELECT * FROM final
